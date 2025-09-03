@@ -1,0 +1,40 @@
+<div class="panel-head">
+  <div>
+    <h3 style="margin:0 0 6px;">{{ lead.company or 'Unknown company' }}</h3>
+    <div class="muted">
+      {{ (lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '') }}
+      • {{ lead.city or '—' }} • {{ lead.source or '—' }} • {{ lead.rep or '—' }}
+    </div>
+  </div>
+  <div>
+    {% set q = (lead.quality or 'unknown') %}
+    <span class="badge {{ q }}">{{ q.title() }}</span>
+  </div>
+</div>
+
+<div class="kv" style="margin-top:8px;">
+  <div><span class="k">Contact</span><span class="v">{{ lead.contact_name or '—' }}</span></div>
+  <div><span class="k">Email</span><span class="v">{{ lead.contact_email or '—' }}</span></div>
+  <div><span class="k">Phone</span><span class="v">{{ lead.phone or '—' }}</span></div>
+  <div><span class="k">Industry</span><span class="v">{{ lead.industry or '—' }}</span></div>
+  <div><span class="k">Fleet Size</span><span class="v">{{ lead.fleet_size or '—' }}</span></div>
+  <div><span class="k">Stage</span><span class="v">{{ (lead.stage or 'new').title() }}</span></div>
+</div>
+
+{% if lead.notes %}
+<div class="notes">
+  <h4>Notes</h4>
+  <p>{{ lead.notes }}</p>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top:12px;">
+  <h4 class="card-title">Best Approach — Playbook</h4>
+  <pre class="analysis">{{ analysis }}</pre>
+  <div class="form-actions">
+    <a class="btn secondary" href="{{ url_for('lead_detail', lead_id=lead.id) }}">Open Full Page</a>
+    <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='good') }}"><button class="btn tiny" type="submit">Good</button></form>
+    <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='warm') }}"><button class="btn tiny secondary" type="submit">Warm</button></form>
+    <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='bad') }}"><button class="btn tiny secondary" type="submit">Bad</button></form>
+  </div>
+</div>

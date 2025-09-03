@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Lead — {{ lead.company or 'Lead' }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>{{ lead.company or 'Unnamed Lead' }}</h2>
+  <div class="actions">
+    <a class="btn secondary" href="{{ url_for('kanban_view') }}">Back to Dashboard</a>
+  </div>
+</section>
+
+<div class="lead-detail-grid">
+  <!-- Lead summary (shorter, scrolls inside) -->
+  <div class="card lead-info">
+    <div class="panel-head" style="margin-bottom:8px;">
+      <div class="meta">
+        {{ (lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '—') }}
+        • {{ lead.city or '—' }}
+        • {{ lead.source or '—' }}
+        • {{ lead.rep or '—' }}
+      </div>
+      {% set q = (lead.quality or 'unknown') %}
+      <span class="badge {{ q }}">{{ q.title() }}</span>
+    </div>
+
+    <h3 class="card-title" style="margin-top:0;">Lead Information</h3>
+    <div class="kv" style="margin-top:8px;">
+      <div><span class="k">Date</span><span class="v">{{ (lead.lead_date.strftime('%Y-%m-%d') if lead.lead_date else '—') }}</span></div>
+      <div><span class="k">Rep</span><span class="v">{{ lead.rep or '—' }}</span></div>
+      <div><span class="k">Source</span><span class="v">{{ lead.source or '—' }}</span></div>
+      <div><span class="k">Company</span><span class="v">{{ lead.company or '—' }}</span></div>
+      <div><span class="k">Address</span><span class="v">{{ lead.address or '—' }}</span></div>
+      <div><span class="k">City</span><span class="v">{{ lead.city or '—' }}</span></div>
+      <div><span class="k">Contact</span><span class="v">{{ lead.contact_name or '—' }}</span></div>
+      <div><span class="k">Email</span><span class="v">{{ lead.contact_email or '—' }}</span></div>
+      <div><span class="k">Phone</span><span class="v">{{ lead.phone or '—' }}</span></div>
+      <div><span class="k">Industry</span><span class="v">{{ lead.industry or '—' }}</span></div>
+      <div><span class="k">Fleet Size</span><span class="v">{{ lead.fleet_size or '—' }}</span></div>
+      <div><span class="k">Stage</span><span class="v">{{ (lead.stage or 'new').title() }}</span></div>
+    </div>
+
+    {% if lead.notes %}
+      <div class="notes" style="margin-top:12px;">
+        <h4 style="margin:0 0 6px;">Notes</h4>
+        <div style="white-space:pre-wrap;">{{ lead.notes }}</div>
+      </div>
+    {% endif %}
+
+    <div class="form-actions" style="margin-top:12px;">
+      <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='good') }}" style="display:inline;">
+        <button class="btn small" type="submit">Mark Good</button>
+      </form>
+      <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='warm') }}" style="display:inline;">
+        <button class="btn small secondary" type="submit">Mark Warm</button>
+      </form>
+      <form method="post" action="{{ url_for('set_quality', lead_id=lead.id, value='bad') }}" style="display:inline;">
+        <button class="btn small secondary" type="submit">Mark Bad</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- AI analysis (taller, scrolls inside; Times New Roman via CSS) -->
+  <div class="card ai-card">
+    <h3 class="card-title">AI Suggested Approach</h3>
+    {% if analysis %}
+      <pre class="analysis">{{ analysis }}</pre>
+    {% else %}
+      <div class="empty-state">No analysis yet for this lead.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

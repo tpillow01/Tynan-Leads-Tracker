@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Add Lead{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Add Lead</h2>
+  <div class="actions">
+    <a class="btn secondary" href="{{ url_for('kanban_view') }}">Back to Dashboard</a>
+  </div>
+</section>
+
+<form method="post" class="card">
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="company">Company</label>
+      <input id="company" name="company" type="text" placeholder="Company (optional)">
+    </div>
+
+    <div class="form-field">
+      <label for="lead_date">Date</label>
+      <input id="lead_date" name="lead_date" type="date">
+    </div>
+
+    <div class="form-field">
+      <label for="source">Source</label>
+      <input id="source" name="source" type="text" placeholder="Source (optional)">
+    </div>
+
+    <div class="form-field">
+      <label for="city">City</label>
+      <input id="city" name="city" type="text" placeholder="City (optional)">
+    </div>
+
+    <div class="form-field span-2">
+      <label for="address">Address</label>
+      <input id="address" name="address" type="text" placeholder="Address (optional)">
+    </div>
+
+    <!-- Assign to Rep -->
+    <div class="form-field">
+      <label for="rep_select">Assign to Rep</label>
+      <select id="rep_select" name="rep_select">
+        <option value="">— None —</option>
+        {% for r in reps %}
+          <option value="{{ r }}">{{ r }}</option>
+        {% endfor %}
+        <option value="__other__">Other…</option>
+      </select>
+    </div>
+    <div class="form-field" id="rep_other_wrap" style="display:none;">
+      <label for="rep_other">Other Rep</label>
+      <input id="rep_other" name="rep_other" type="text" placeholder="Type a rep name">
+    </div>
+
+    <div class="form-field span-2">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" placeholder="Any notes (optional)"></textarea>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn" type="submit">Save Lead</button>
+    <a class="btn secondary" href="{{ url_for('kanban_view') }}">Cancel</a>
+  </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const sel = document.getElementById('rep_select');
+  const wrap = document.getElementById('rep_other_wrap');
+  sel.addEventListener('change', () => {
+    wrap.style.display = sel.value === '__other__' ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

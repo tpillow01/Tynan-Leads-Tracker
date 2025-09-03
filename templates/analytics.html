@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Lead Strategies{% endblock %}
+
+{% block content %}
+<!-- Minimal safety styles in case theme-light CSS isn't present -->
+<style>
+  .analytics-safe * { color: #111; }
+  .analytics-safe h2, .analytics-safe h3 { color: #111; }
+  .analytics-safe .card { background:#fff; border:1px solid #e8eaf0; border-radius:14px; padding:16px; }
+</style>
+
+<section class="page-header analytics-safe">
+  <h2>Analytics</h2>
+</section>
+
+<div class="grid-2 analytics-safe">
+  <div class="card">
+    <h3 class="card-title">KPIs</h3>
+    <div class="kv">
+      <div><span class="k">Total Leads</span><span class="v">{{ kpis.total }}</span></div>
+      <div><span class="k">Good</span><span class="v">{{ kpis.good }}</span></div>
+      <div><span class="k">Warm</span><span class="v">{{ kpis.warm }}</span></div>
+      <div><span class="k">Bad</span><span class="v">{{ kpis.bad }}</span></div>
+      <div><span class="k">Unknown</span><span class="v">{{ kpis.unknown }}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Leads by Rep</h3>
+    <div style="height:300px"><canvas id="repChart"></canvas></div>
+    <noscript><div class="muted">Charts need JavaScript enabled.</div></noscript>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Leads by Quality</h3>
+    <div style="height:300px"><canvas id="qualityChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Leads by Stage</h3>
+    <div style="height:300px"><canvas id="stageChart"></canvas></div>
+  </div>
+
+  <div class="card" style="grid-column: 1 / -1;">
+    <h3 class="card-title">Leads Over Time</h3>
+    <div style="height:320px"><canvas id="monthChart"></canvas></div>
+  </div>
+</div>
+
+<!-- 1) DATA: embed as JSON so linters are happy and parsing is robust -->
+<script id="analytics-data" type="application/json">
+{{ {
+  "rep_labels": rep_labels,
+  "rep_values": rep_values,
+  "quality_labels": quality_labels,
+  "quality_values": quality_values,
+  "stage_labels": stage_labels,
+  "stage_values": stage_values,
+  "month_labels": month_labels,
+  "month_values": month_values
+} | tojson | safe }}
+</script>
+
+<!-- 2) Chart.js (CDN). If your environment blocks CDNs, the fallback code will show a message instead of a blank page. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+(function(){
+  // Robustly parse the embedded JSON:
+  let data = {
+    rep_labels: [], rep_values: [],
+    quality_labels: [], quality_values: [],
+    stage_labels: [], stage_values: [],
+    month_labels: [], month_values: []
+  };
+  try {
+    const raw = document.getElementById('analytics-data')?.textContent || '{}';
+    data = JSON.parse(raw);
+  } catch(e) {
+    console.error('Failed to parse analytics data JSON:', e);
+  }
+
+  function ensureChartJs(){
+    if (typeof Chart === 'undefined') {
+      // Show graceful messages instead of a blank page
+      ['repChart','qualityChart','stageChart','monthChart'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const msg = document.createElement('div');
+          msg.className = 'muted';
+          msg.style.margin = '8px 0';
+          msg.textContent = 'Chart.js failed to load (network/CSP?). Data parsed correctly.';
+          el.parentElement?.appendChild(msg);
+        }
+      });
+      return false;
+    }
+    return true;
+  }
+
+  if (!ensureChartJs()) return;
+
+  function mkBar(id, labels, vals){
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: '', data: vals }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  }
+
+  function mkPie(id, labels, vals){
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'pie',
+      data: { labels, datasets: [{ data: vals }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  function mkLine(id, labels, vals){
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label: '', data: vals, tension: .3, fill: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  }
+
+  mkBar('repChart', data.rep_labels || [], data.rep_values || []);
+  mkPie('qualityChart', data.quality_labels || [], data.quality_values || []);
+  mkBar('stageChart', data.stage_labels || [], data.stage_values || []);
+  mkLine('monthChart', data.month_labels || [], data.month_values || []);
+})();
+</script>
+{% endblock %}

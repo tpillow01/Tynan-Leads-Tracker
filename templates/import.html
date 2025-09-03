@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Import Leads — Lead Strategies{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Import Leads</h2>
+  <div class="actions">
+    <a class="btn secondary" href="{{ url_for('kanban_view') }}">Back to Dashboard</a>
+  </div>
+</section>
+
+<div class="card">
+  <p class="muted" style="margin-top:0;">
+    Upload an Excel/CSV file. Supported: <strong>.xlsx, .xls, .csv</strong>.
+  </p>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('import_leads_view') }}">
+    <div class="form-grid">
+      <div class="form-field span-2">
+        <label for="file">File</label>
+        <input id="file" name="file" type="file" accept=".xlsx,.xls,.csv">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Import</button>
+      <a class="btn secondary" href="{{ url_for('kanban_view') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

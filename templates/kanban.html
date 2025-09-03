@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}Kanban — Lead Strategies{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Kanban Pipeline</h2>
+</section>
+
+<form method="get" action="{{ url_for('kanban_view') }}" class="card filter sticky-controls" style="margin-bottom:10px;">
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="q">Search</label>
+      <input id="q" name="q" type="text" value="{{ q or '' }}" placeholder="Search company, notes, city, source, etc.">
+    </div>
+    <div class="form-field">
+      <label for="quality">Quality</label>
+      <select id="quality" name="quality">
+        <option value="" {% if (quality_filter or '')=='' %}selected{% endif %}>All</option>
+        <option value="good" {% if quality_filter=='good' %}selected{% endif %}>Good</option>
+        <option value="warm" {% if quality_filter=='warm' %}selected{% endif %}>Warm</option>
+        <option value="bad"  {% if quality_filter=='bad' %}selected{% endif %}>Bad</option>
+        <option value="unknown" {% if quality_filter=='unknown' %}selected{% endif %}>Unknown</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn" type="submit">Apply</button>
+    <a class="btn secondary" href="{{ url_for('kanban_view') }}">Clear</a>
+  </div>
+</form>
+
+<div class="card sticky-controls" style="padding: 8px; margin-bottom: 8px;">
+  <div class="rep-rail">
+    <a class="rep-chip {% if not rep_filter %}active{% endif %}"
+       href="{{ url_for('kanban_view', q=q, quality=quality_filter) }}">All Reps</a>
+    {% for r in reps %}
+      <a class="rep-chip {% if rep_filter == r %}active{% endif %}"
+         href="{{ url_for('kanban_view', q=q, rep=r, quality=quality_filter) }}">{{ r }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Scroll-preserving viewport + per-lane scroll storage -->
+<div class="viewport" id="kanbanViewport">
+  <div class="kanban kanban--tri">
+    {% for title, drop_stage, key in columns %}
+    <div class="kanban-col kanban-col--{{ key }}" data-stage="{{ drop_stage }}">
+      <div class="kanban-col-head">
+        {{ title }} <span class="count">{{ (groups[key] or [])|length }}</span>
+      </div>
+      <div class="kanban-col-body droptarget" data-col="{{ key }}">
+        {% if groups[key] and groups[key]|length > 0 %}
+          {% for l in groups[key] %}
+          {% set q = (l.quality or 'unknown') %}
+          <div class="kanban-card" draggable="true" data-lead-id="{{ l.id }}">
+            <div class="kc-top">
+              <div class="kc-company">{{ l.company or 'Unknown company' }}</div>
+              <span class="badge {{ q }}">{{ q.title() }}</span>
+            </div>
+            <div class="kc-meta">
+              {{ (l.lead_date.strftime('%Y-%m-%d') if l.lead_date else '') }}
+              • {{ l.city or '—' }} • {{ l.rep or '—' }}
+            </div>
+            {% if l.notes %}
+            <div class="kc-notes">{{ l.notes[:120] }}{% if l.notes|length > 120 %}…{% endif %}</div>
+            {% endif %}
+            <div class="kc-actions">
+              <!-- View is neutral -->
+              <a class="btn tiny secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">View</a>
+
+              <!-- Quality buttons: selected one is red -->
+              <form method="post" action="{{ url_for('set_quality', lead_id=l.id, value='good') }}">
+                <button class="btn tiny {% if (l.quality or 'unknown')|lower != 'good' %}secondary{% endif %}" type="submit">Good</button>
+              </form>
+              <form method="post" action="{{ url_for('set_quality', lead_id=l.id, value='warm') }}">
+                <button class="btn tiny {% if (l.quality or 'unknown')|lower != 'warm' %}secondary{% endif %}" type="submit">Warm</button>
+              </form>
+
+              <!-- Dead: remove from board (stage='lost') -->
+              <form method="post" action="{{ url_for('mark_dead', lead_id=l.id) }}">
+                <button class="btn tiny secondary" type="submit">Dead</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:16px;">
+            <div class="muted">No leads here yet.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Drag & Drop: move cards and persist stage -->
+<script>
+(function () {
+  let draggingCard = null;
+
+  function updateCounts() {
+    document.querySelectorAll('.kanban-col').forEach(col => {
+      const count = col.querySelectorAll('.kanban-card').length;
+      const badge = col.querySelector('.kanban-col-head .count');
+      if (badge) badge.textContent = count;
+    });
+  }
+
+  document.querySelectorAll('.kanban-col-body.droptarget').forEach(colBody => {
+    colBody.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      colBody.classList.add('dropover');
+    });
+    colBody.addEventListener('dragleave', () => {
+      colBody.classList.remove('dropover');
+    });
+    colBody.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      colBody.classList.remove('dropover');
+
+      const card = document.querySelector('.kanban-card.dragging') || draggingCard;
+      if (!card) return;
+
+      // Move visually first
+      colBody.appendChild(card);
+
+      // Persist to server
+      const leadId = card.dataset.leadId;
+      const col = colBody.closest('.kanban-col');
+      const stage = col && col.dataset.stage ? col.dataset.stage : '';
+      try {
+        const res = await fetch('/api/kanban/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: leadId, stage })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.ok) throw new Error(json.error || 'Update failed');
+        updateCounts();
+      } catch (err) {
+        alert('Could not update lead stage: ' + err.message);
+        location.reload();
+      }
+    });
+  });
+
+  document.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.kanban-card');
+    if (!card) return;
+    draggingCard = card;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.dataset.leadId || '');
+  });
+
+  document.addEventListener('dragend', (e) => {
+    const card = e.target.closest('.kanban-card');
+    if (card) card.classList.remove('dragging');
+    draggingCard = null;
+  });
+
+  // Reorder within a column
+  function handleReorder(e) {
+    e.preventDefault();
+    const target = e.currentTarget;
+    const dragging = document.querySelector('.kanban-card.dragging');
+    if (!dragging || dragging === target) return;
+
+    const rect = target.getBoundingClientRect();
+    const after = (e.clientY - rect.top) > rect.height / 2;
+    target.parentElement.insertBefore(dragging, after ? target.nextSibling : target);
+  }
+  document.querySelectorAll('.kanban-card').forEach(card => {
+    card.addEventListener('dragover', handleReorder);
+  });
+
+  // Make updateCounts available to other scripts
+  window.updateCounts = updateCounts;
+})();
+</script>
+
+<!-- No-jump UX: restore scroll & AJAX quality + dead buttons -->
+<script>
+(function () {
+  // -------- Scroll restore (page + per-lane) --------
+  const vp = document.getElementById('kanbanViewport');
+  const pageKey = 'kb:scroll:' + location.pathname + location.search;
+
+  function colKey(colEl) {
+    const col = colEl.dataset.col || 'col';
+    return pageKey + ':lane:' + col;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const y = parseInt(localStorage.getItem(pageKey) || '0', 10);
+      if (vp && y > 0) vp.scrollTop = y;
+
+      document.querySelectorAll('.kanban-col-body.droptarget').forEach(el => {
+        const ky = colKey(el);
+        const yy = parseInt(localStorage.getItem(ky) || '0', 10);
+        if (yy > 0) el.scrollTop = yy;
+      });
+    } catch (_) {}
+  });
+
+  let t1, t2 = {};
+  if (vp) {
+    vp.addEventListener('scroll', () => {
+      clearTimeout(t1);
+      t1 = setTimeout(() => {
+        try { localStorage.setItem(pageKey, String(vp.scrollTop)); } catch(_) {}
+      }, 120);
+    });
+  }
+  document.querySelectorAll('.kanban-col-body.droptarget').forEach(el => {
+    el.addEventListener('scroll', () => {
+      clearTimeout(t2[el.dataset.col]);
+      t2[el.dataset.col] = setTimeout(() => {
+        try { localStorage.setItem(colKey(el), String(el.scrollTop)); } catch(_) {}
+      }, 120);
+    });
+  });
+
+  // -------- Intercept inline action forms (AJAX) --------
+  document.addEventListener('submit', async (e) => {
+    const form = e.target.closest('.kc-actions form');
+    if (!form) return;
+    e.preventDefault();
+
+    const btn = form.querySelector('button');
+    const card = form.closest('.kanban-card');
+    const badge = card.querySelector('.badge');
+
+    if (btn) btn.disabled = true;
+
+    try {
+      const isQuality = /\/quality\/(good|warm|bad)\b/i.test(form.action);
+      const isDead    = /\/lead\/\d+\/dead\b/i.test(form.action);
+
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'fetch' }  // prefer JSON response from server
+      });
+      if (!res.ok) throw new Error('Server error ' + res.status);
+      try { await res.json(); } catch(_) {}
+
+      if (isQuality) {
+        const val = (form.action.match(/\/quality\/(good|warm|bad)\b/i) || [,''])[1].toLowerCase();
+
+        // Update badge color/text
+        if (badge) {
+          badge.classList.remove('good','warm','bad','unknown');
+          badge.classList.add(val);
+          badge.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+        }
+
+        // Toggle which quality button is red (primary)
+        const goodBtn = card.querySelector('form[action$="/quality/good"] button');
+        const warmBtn = card.querySelector('form[action$="/quality/warm"] button');
+        const badBtn  = card.querySelector('form[action$="/quality/bad"] button'); // may be null
+        [['good',goodBtn],['warm',warmBtn],['bad',badBtn]].forEach(([k, el])=>{
+          if (!el) return;
+          if (k === val) el.classList.remove('secondary'); else el.classList.add('secondary');
+        });
+
+      } else if (isDead) {
+        // Remove card from the board entirely (dead leads stay off main page)
+        card.remove();
+        if (typeof updateCounts === 'function') updateCounts();
+      }
+    } catch (err) {
+      alert('Action failed: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  // Keep layout from shifting when scrollbars appear
+  try {
+    document.documentElement.style.scrollbarGutter = 'stable both-edges';
+  } catch(_) {}
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Inbox — Lead Strategies{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Inbox</h2>
+</section>
+
+<!-- Rep Rail (quick jump by Rep; NOT part of form) -->
+<div class="card" style="padding: 8px; margin-bottom: 8px;">
+  <div class="rep-rail">
+    <a class="rep-chip {% if not rep_filter %}active{% endif %}"
+       href="{{ url_for('inbox_view', q=q, quality=quality_filter, sort=sort, dir=direction, per_page=per_page) }}">All Reps</a>
+    {% for r in reps %}
+      <a class="rep-chip {% if rep_filter == r %}active{% endif %}"
+         href="{{ url_for('inbox_view', q=q, rep=r, quality=quality_filter, sort=sort, dir=direction, per_page=per_page) }}">{{ r }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="viewport">
+  <div class="inbox-layout">
+    <!-- Sidebar Filters (Rep removed) -->
+    <aside class="inbox-sidebar card">
+      <form method="get" action="{{ url_for('inbox_view') }}">
+        <div class="form-field">
+          <label for="q">Search</label>
+          <input id="q" name="q" type="text" value="{{ q or '' }}" placeholder="Company, city, source, notes…">
+        </div>
+
+        <div class="form-field">
+          <label for="quality">Quality</label>
+          <select id="quality" name="quality">
+            {% set qs = quality_filter or '' %}
+            <option value="" {% if qs=='' %}selected{% endif %}>All</option>
+            <option value="good" {% if qs=='good' %}selected{% endif %}>Good</option>
+            <option value="warm" {% if qs=='warm' %}selected{% endif %}>Warm</option>
+            <option value="bad"  {% if qs=='bad' %}selected{% endif %}>Bad</option>
+            <option value="unknown" {% if qs=='unknown' %}selected{% endif %}>Unknown</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="per_page">Per page</label>
+          <select id="per_page" name="per_page">
+            {% for n in [25,50,100,200] %}
+              <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="sort">Sort</label>
+          <select id="sort" name="sort">
+            {% for k in ['lead_date','created','company','rep','source','city','stage','quality'] %}
+              <option value="{{k}}" {% if sort==k %}selected{% endif %}>{{ k.title().replace('_',' ') }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="dir">Direction</label>
+          <select id="dir" name="dir">
+            <option value="desc" {% if direction=='desc' %}selected{% endif %}>Desc</option>
+            <option value="asc"  {% if direction=='asc' %}selected{% endif %}>Asc</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn" type="submit">Apply</button>
+          <a class="btn secondary" href="{{ url_for('inbox_view') }}">Clear</a>
+        </div>
+      </form>
+    </aside>
+
+    <!-- List -->
+    <section class="inbox-list card">
+      {% for l in leads %}
+      {% set q = (l.quality or 'unknown') %}
+      <div class="inbox-row" data-lead-id="{{ l.id }}">
+        <div class="inbox-row-main">
+          <div class="company">{{ l.company or 'Unknown company' }}</div>
+          <div class="meta">
+            {{ (l.lead_date.strftime('%Y-%m-%d') if l.lead_date else '') }}
+            • {{ l.city or '—' }} • {{ l.source or '—' }} • {{ l.rep or '—' }}
+          </div>
+        </div>
+        <div class="inbox-row-side">
+          <span class="badge {{ q }}">{{ q.title() }}</span>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="form-actions" style="justify-content:space-between; margin-top:12px;">
+        <div class="muted">Page {{ pagination.page }} of {{ pagination.pages }} — {{ pagination.total }} leads</div>
+        <div>
+          {% if pagination.has_prev %}
+            <a class="btn secondary" href="{{ url_for('inbox_view', q=q, rep=rep_filter, quality=quality_filter, per_page=per_page, sort=sort, dir=direction, page=pagination.prev_num) }}">← Prev</a>
+          {% endif %}
+          {% if pagination.has_next %}
+            <a class="btn secondary" href="{{ url_for('inbox_view', q=q, rep=rep_filter, quality=quality_filter, per_page=per_page, sort=sort, dir=direction, page=pagination.next_num) }}">Next →</a>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Detail Panel -->
+    <aside class="inbox-panel card" id="inboxPanel">
+      <div class="muted">Select a lead from the list to view details.</div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

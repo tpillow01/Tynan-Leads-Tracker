@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Dead Leads — Lead Strategies{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Dead Leads</h2>
+</section>
+
+<form method="get" action="{{ url_for('dead_leads_view') }}" class="card" style="margin-bottom:12px;">
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="q">Search</label>
+      <input id="q" name="q" type="text" value="{{ q or '' }}" placeholder="Search company, notes, city, source, rep...">
+    </div>
+    <div class="form-field">
+      <label for="rep">Rep</label>
+      <select id="rep" name="rep">
+        <option value="" {{ 'selected' if not rep }}>All</option>
+        {% for r in reps %}
+          <option value="{{ r }}" {{ 'selected' if rep==r }}>{{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn" type="submit">Apply</button>
+    <a class="btn secondary" href="{{ url_for('dead_leads_view') }}">Clear</a>
+  </div>
+</form>
+
+<div class="table-wrap card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Date</th>
+        <th>City</th>
+        <th>Rep</th>
+        <th>Source</th>
+        <th>Notes</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in leads %}
+      <tr>
+        <td>{{ l.company or 'Unknown' }}</td>
+        <td>{{ (l.lead_date.strftime('%Y-%m-%d') if l.lead_date else '') }}</td>
+        <td>{{ l.city or '' }}</td>
+        <td>{{ l.rep or '' }}</td>
+        <td>{{ l.source or '' }}</td>
+        <td style="max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ l.notes or '' }}</td>
+        <td class="right">
+          <a class="btn small secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">Open</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="muted">No dead leads found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,539 @@
+/* =========================================================
+   Lead Strategies — Clean UI (Light-first, polished)
+   Keeps existing class names: header, card, btn, data-table,
+   grid-2, kv, analysis, kanban, inbox, badges, viewport,
+   rep-rail, sticky-controls, etc.
+   ========================================================= */
+
+/* ---------- Design tokens (light defaults) ---------- */
+:root{
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f4f6fb;
+  --ink: #111;
+  --ink-muted: #4b5668;
+  --ink-soft: #6a7383;
+  --line: #e8eaf0;
+
+  --brand: #e21b2d;     /* primary red */
+  --brand-dark: #b51625;/* darker red */
+  --ok: #2fb673;        /* green */
+  --warn: #f2b84a;      /* amber */
+  --err: #e25555;       /* red error */
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 16px;
+
+  --shadow-1: 0 6px 16px rgba(20,32,50,.08);
+  --shadow-2: 0 8px 20px rgba(24,40,72,.12);
+
+  --container: 1160px;
+  --pad: 18px;
+
+  --font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+           Roboto, Arial, "Helvetica Neue", "Noto Sans", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+/* ---------- Base ---------- */
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main{
+  max-width: var(--container);
+  margin: 24px auto 40px;
+  padding: 0 var(--pad);
+}
+
+/* ---------- Header ---------- */
+header{
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: saturate(120%) blur(8px);
+  background: rgba(255,255,255,.9);
+  border-bottom: 1px solid var(--line);
+}
+.header-container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 12px var(--pad);
+  display: flex; align-items: center; justify-content: space-between;
+}
+header h1{
+  margin: 0; font-size: 18px; letter-spacing: .2px; color: var(--ink);
+}
+nav a{
+  color: var(--ink);
+  text-decoration: none;
+  margin-left: 10px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+}
+nav a:hover{ background: var(--surface-2); border-color: var(--line); }
+
+/* ---------- Page header ---------- */
+.page-header{
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin: 8px 0 18px;
+}
+.page-header h2{ margin: 0; font-size: 26px; letter-spacing:.2px; }
+.actions .btn{ margin-left: 8px; }
+.muted{ color: var(--ink-soft); }
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:10px 14px;
+  border-radius: var(--r-md);
+  background: var(--brand);
+  color:#fff;
+  font-weight:700;
+  text-decoration:none;
+  border: 1px solid var(--brand-dark);
+  box-shadow: var(--shadow-1);
+  cursor:pointer;
+  transition: filter .2s ease, transform .06s ease, box-shadow .2s ease;
+}
+.btn:hover{ filter: brightness(1.05); }
+.btn:active{ transform: translateY(1px); }
+
+.btn.secondary{
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  font-weight:600;
+}
+.btn.small{ padding: 6px 10px; font-size: 13px; }
+.btn.tiny{ padding: 6px 8px; font-size: 12px; border-radius: 10px; }
+
+/* ---------- Cards / Sections ---------- */
+.card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-1);
+}
+.card + .card{ margin-top: 16px; }
+.card-title{ margin: 0 0 8px; font-size: 18px; }
+
+/* Filter card spacing (slightly tighter) */
+.card.filter{ padding:14px 16px; }
+
+/* Sticky controls: filter + rep rail */
+.sticky-controls { position: sticky; top: 64px; z-index: 5; }
+.sticky-controls + .sticky-controls { top: 122px; }
+
+/* ---------- Flash Messages ---------- */
+.flash-messages{ margin-bottom: 16px; }
+.flash{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+}
+.flash.success{ border-color: var(--ok); }
+.flash.error{ border-color: var(--err); }
+.flash.warn{ border-color: var(--warn); }
+
+/* ---------- Forms ---------- */
+.form-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px; /* compact */
+}
+@media (max-width: 720px){ .form-grid{ grid-template-columns: 1fr; } }
+
+.form-field{ display: flex; flex-direction: column; gap: 6px; }
+.form-field.span-2{ grid-column: 1 / -1; }
+
+label{ font-size: 13px; color: var(--ink-muted); }
+
+input[type=text],
+input[type=email],
+select,
+textarea{
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+select{
+  appearance: none;
+  background-image:
+    linear-gradient(45deg,transparent 50%,var(--ink) 50%),
+    linear-gradient(135deg,var(--ink) 50%,transparent 50%);
+  background-position: calc(100% - 18px) 16px, calc(100% - 12px) 16px;
+  background-size: 6px 6px; background-repeat: no-repeat;
+}
+input::placeholder, textarea::placeholder{ color: #9aa3b2; }
+input:focus, textarea:focus, select:focus{
+  border-color: #cfd6e3;
+  box-shadow: 0 0 0 3px rgba(226,27,45,.18);
+}
+textarea{ resize: vertical; min-height: 110px; }
+
+.form-actions{ margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Tables ---------- */
+.table-wrap{
+  overflow: auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.data-table{
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.data-table th, .data-table td{
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+}
+.data-table thead th{
+  position: sticky; top: 0; z-index: 1;
+  background: var(--surface-2);
+  text-align: left; font-size: 13px; color: var(--ink-muted);
+}
+.data-table tbody tr:hover{ background: #f9fafc; }
+.right{ text-align: right; }
+
+/* Make header links clearly clickable */
+.data-table th a{ color: var(--ink); text-decoration: none; }
+.data-table th a:hover{ color: var(--brand); }
+
+/* ---------- Layout helpers ---------- */
+.grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 900px){ .grid-2{ grid-template-columns: 1fr; } }
+
+.kv > div{
+  display: grid; grid-template-columns: 180px 1fr; gap: 10px;
+  padding: 8px 0; border-bottom: 1px dashed var(--line);
+}
+.kv .k{ color: var(--ink-muted); }
+.kv .v{ color: var(--ink); }
+.notes h4{ margin: 12px 0 6px; }
+
+/* ---------- Analysis block ---------- */
+/* AI output block — cleaner reading */
+pre.analysis {
+  margin: 0;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: auto;
+  font-family: "Times New Roman", Times, serif; /* <-- switch font */
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap; /* wrap long sentences nicely */
+  color: #111;
+}
+
+/* ---------- Empty State ---------- */
+.empty-state{
+  background: #fff; border:1px dashed var(--line); color: var(--ink-soft);
+  padding: 14px; border-radius: 12px; font-size: 14px; text-align:center;
+}
+
+/* ---------- Accessibility ---------- */
+:focus-visible{
+  outline: 3px solid rgba(226,27,45,.5);
+  outline-offset: 2px;
+}
+
+/* ---------- Viewport limiter (keeps pages short) ---------- */
+.viewport{
+  max-height: calc(100vh - 220px); /* adjust if header/filter height changes */
+  overflow: auto;
+  padding-bottom: 8px;
+}
+
+/* ---------- Rep Rail ---------- */
+.rep-rail{
+  display: flex; gap: 8px; overflow: auto; padding: 8px; margin-bottom: 10px;
+}
+.rep-chip{
+  display: inline-flex; align-items: center; padding: 8px 12px;
+  border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); text-decoration: none;
+  white-space: nowrap; box-shadow: 0 2px 6px rgba(20,32,50,.05);
+}
+.rep-chip:hover { background: var(--surface-2); }
+.rep-chip.active{
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(226,27,45,.12);
+  font-weight: 700;
+}
+.rep-chip .count{
+  margin-left:6px; font-size:11px; padding:1px 6px; border-radius:999px;
+  background: var(--surface-2); border:1px solid var(--line); color: var(--ink-muted);
+}
+
+/* ---------- Card grid (used by cards view) ---------- */
+.cards-grid{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;
+}
+@media (max-width:1100px){ .cards-grid{ grid-template-columns: repeat(2, 1fr);} }
+@media (max-width:720px){ .cards-grid{ grid-template-columns: 1fr; } }
+
+.lead-card{
+  padding:16px; border-radius:16px; background:#fff; border:1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.lead-card .top{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;
+}
+.lead-card .company{ font-weight:700; font-size:16px; color:#1e2430; }
+.lead-card .meta{ font-size:13px; color:var(--ink-soft); }
+.lead-card .notes{ margin:10px 0; color:#2e3441; min-height:2.2em }
+.lead-card .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* ---------- Quality badges ---------- */
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px;
+  border:1px solid transparent;
+}
+.badge.good{ background:#eaf9f1; color:#175f39; border-color:#c9efd9; }
+.badge.warm{ background:#fff6e6; color:#7a4d07; border-color:#ffe7bd; }
+.badge.bad { background:#feebee; color:#7b1820; border-color:#ffd4d9; }
+.badge.unknown{ background:#eef2f7; color:#404a5a; border-color:#e0e6ef; }
+
+/* =========================================================
+   Kanban (3-lane layout, hover/drag affordances, counts)
+   ========================================================= */
+.kanban{
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px;
+}
+@media (max-width:1200px){ .kanban{ grid-template-columns: repeat(3, 1fr);} }
+@media (max-width:760px){ .kanban{ grid-template-columns: 1fr;} }
+
+/* Explicit 3-column grid when used with .kanban--tri */
+.kanban--tri { grid-template-columns: repeat(3, 1fr); }
+
+.kanban-col{
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  display:flex; flex-direction:column; box-shadow: var(--shadow-1);
+  min-height: 360px;
+}
+.kanban-col-head{
+  display:flex; align-items:center; gap:8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--line);
+  font-weight: 700; color: var(--ink);
+}
+.kanban-col-head .count{
+  font-size:12px; padding:2px 8px; border-radius:999px;
+  background: var(--surface-2); color: var(--ink-muted); border:1px solid var(--line);
+}
+.kanban-col-body{
+  padding: 12px; display:flex; flex-direction:column; gap: 10px;
+  min-height: 240px; max-height: calc(100vh - 330px); overflow: auto;
+  scroll-behavior:smooth;
+}
+
+/* Subtle lane tints for the 3 classifications */
+.kanban-col--no_contact       { background: #f7f9fc; }
+.kanban-col--in_discussion    { background: #f5fbf7; }
+.kanban-col--dead             { background: #fffaf2; }
+
+/* Gutter separators */
+.kanban .kanban-col + .kanban-col { box-shadow: inset 1px 0 0 var(--line); }
+
+/* Cards: denser, with drag affordances */
+.kanban-card{
+  background: #fff; border:1px solid #e6eaf2; border-radius:14px; padding:12px;
+  box-shadow: 0 4px 14px rgba(24,40,72,.06);
+  transition: transform .06s ease, box-shadow .2s ease;
+  cursor: grab;
+}
+.kanban-card:active{ cursor: grabbing; }
+.kanban-card:hover{ transform: translateY(-1px); box-shadow: var(--shadow-2); }
+
+.kc-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.kc-company{ font-weight:700; font-size:15px; color:#141a26; }
+.kc-meta{ margin-top:4px; font-size:13px; color: var(--ink-soft); }
+.kc-notes{ margin-top:8px; line-height:1.45; color:#2a3242; }
+.kc-actions{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+/* Softer action buttons */
+.kc-actions .btn{ box-shadow:none; }
+.kc-actions .btn.tiny{ font-weight:600; }
+.kc-actions .btn.tiny.secondary{ border-color: var(--line); background:#fff; }
+
+/* Drop target feedback */
+.droptarget{
+  border:2px dashed transparent; border-radius:12px;
+  transition: background .15s ease, border-color .15s ease;
+}
+.droptarget.dropover{
+  background: rgba(34,139,230,.06);
+  border-color:#bcd7f7;
+}
+
+/* Empty body hint */
+.kanban-col-body:empty::after{
+  content:"No leads yet."; display:block; color: var(--ink-soft);
+  padding: 10px; text-align:center;
+}
+
+/* Custom scrollbars (WebKit) */
+.kanban-col-body::-webkit-scrollbar,
+.viewport::-webkit-scrollbar{
+  width:10px; height:10px;
+}
+.kanban-col-body::-webkit-scrollbar-thumb,
+.viewport::-webkit-scrollbar-thumb{
+  background:#cfd6e3; border-radius:999px;
+}
+.kanban-col-body::-webkit-scrollbar-track,
+.viewport::-webkit-scrollbar-track{
+  background:transparent;
+}
+
+/* ---------- Inbox split ---------- */
+.inbox-layout{
+  display:grid; grid-template-columns: 280px 1fr 420px; gap:14px;
+}
+@media (max-width:1200px){ .inbox-layout{ grid-template-columns: 260px 1fr; } }
+@media (max-width:900px){ .inbox-layout{ grid-template-columns: 1fr; } }
+
+.inbox-sidebar{ position: sticky; top: 76px; height: fit-content; }
+.inbox-list{ max-height: calc(100vh - 240px); overflow: auto; background:#fff; border:1px solid var(--line); border-radius: var(--r-lg); }
+.inbox-panel{ max-height: calc(100vh - 240px); overflow: auto; }
+
+.inbox-row{
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--line); padding:10px 12px; cursor: pointer;
+}
+.inbox-row:hover{ background:#f6f8fb; }
+.inbox-row .company{ font-weight:700; color: var(--ink); }
+.inbox-row .meta{ font-size:12px; color:var(--ink-soft); }
+
+.panel-head{ display:flex; justify-content:space-between; align-items:flex-start; }
+
+/* ---------- Optional Dark Theme ---------- */
+/* Toggle by adding class="theme-dark" to <body> (JS toggle provided) */
+.theme-dark{
+  --bg: #0f1116;
+  --surface: #171a20;
+  --surface-2: #131720;
+  --ink: #f6f7fb;
+  --ink-muted: #cdd3de;
+  --ink-soft: #95a0b2;
+  --line: #2a2f38;
+}
+.theme-dark header{ background: rgba(14,15,18,.85); }
+.theme-dark nav a:hover{ background: #1b2230; border-color: var(--line); }
+.theme-dark .data-table tbody tr:hover{ background:#1a1e25; }
+.theme-dark .inbox-row:hover{ background:#1a1e25; }
+.theme-dark .kanban-col--no_contact    { background: #121722; }
+.theme-dark .kanban-col--in_discussion { background: #101b16; }
+.theme-dark .kanban-col--dead          { background: #19140c; }
+
+
+/* ===== Lead detail layout: shorter lead panel, taller AI panel ===== */
+.lead-detail-grid{
+  display:grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap:18px;
+  align-items:start;
+}
+@media (max-width: 900px){
+  .lead-detail-grid{ grid-template-columns: 1fr; }
+}
+
+/* Lead info should be shorter and scroll internally */
+.card.lead-info{
+  max-height: calc(100vh - 320px); /* shorter */
+  overflow:auto;
+}
+
+/* AI card can be a bit taller (analysis often longer) */
+.card.ai-card{
+  max-height: calc(100vh - 260px); /* taller than lead-info */
+  overflow:auto;
+}
+
+/* Optional: make long notes not blow up height */
+.lead-info .notes{
+  max-height: 220px;
+  overflow:auto;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background:#fff;
+}
+
+/* Nice, subtle scrollbars */
+.card.lead-info::-webkit-scrollbar,
+.card.ai-card::-webkit-scrollbar,
+.lead-info .notes::-webkit-scrollbar{
+  width:10px; height:10px;
+}
+.card.lead-info::-webkit-scrollbar-thumb,
+.card.ai-card::-webkit-scrollbar-thumb,
+.lead-info .notes::-webkit-scrollbar-thumb{
+  background:#cfd6e3; border-radius:999px;
+}
+.card.lead-info::-webkit-scrollbar-track,
+.card.ai-card::-webkit-scrollbar-track,
+.lead-info .notes::-webkit-scrollbar-track{
+  background:transparent;
+}
+
+:root { scrollbar-gutter: stable both-edges; }
+
+/* Make the board auto-fit across the screen and wrap on smaller widths */
+.kanban--tri {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+/* Ensure the viewport never causes horizontal scroll */
+.viewport {
+  overflow-x: hidden;
+}
+
+/* Column/card sizing stays clean on narrow screens */
+.kanban-col { min-width: 0; }            /* prevent min-content overflow */
+.kanban-col-body { min-height: 240px; }  /* keep lane bodies usable */
+.kc-company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kc-notes { overflow: hidden; }
+
+/* Dead Leads grid: 4 across, wrap as needed */
+.cards-grid-4{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:16px;
+}
+@media (max-width: 1400px){ .cards-grid-4{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1024px){ .cards-grid-4{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px){  .cards-grid-4{ grid-template-columns: 1fr; } }
+
+/* Keep cards tidy in grid */
+.cards-grid-4 .kanban-card{ width:100%; }
+
+/* Badge for 'Dead' status (distinct from quality) */
+.badge.dead{
+  background:#eef2f7;
+  color:#404a5a;
+  border:1px solid #e0e6ef;
+}

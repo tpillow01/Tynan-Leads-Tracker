@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Dead Leads — Lead Strategies{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h2>Dead Leads</h2>
+</section>
+
+<form method="get" action="{{ url_for('dead_leads_view') }}" class="card filter" style="margin-bottom:10px;">
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="q">Search</label>
+      <input id="q" name="q" type="text" value="{{ q or '' }}" placeholder="Search company, notes, city, source, etc.">
+    </div>
+    <div class="form-field">
+      <label for="quality">Quality</label>
+      <select id="quality" name="quality">
+        <option value="" {% if (quality_filter or '')=='' %}selected{% endif %}>All</option>
+        <option value="good" {% if quality_filter=='good' %}selected{% endif %}>Good</option>
+        <option value="warm" {% if quality_filter=='warm' %}selected{% endif %}>Warm</option>
+        <option value="bad"  {% if quality_filter=='bad' %}selected{% endif %}>Bad</option>
+        <option value="unknown" {% if quality_filter=='unknown' %}selected{% endif %}>Unknown</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn" type="submit">Apply</button>
+    <a class="btn secondary" href="{{ url_for('dead_leads_view') }}">Clear</a>
+  </div>
+</form>
+
+<div class="card" style="padding:8px; margin-bottom:8px;">
+  <div class="rep-rail">
+    <a class="rep-chip {% if not rep_filter %}active{% endif %}"
+       href="{{ url_for('dead_leads_view', q=q, quality=quality_filter) }}">All Reps</a>
+    {% for r in reps %}
+      <a class="rep-chip {% if rep_filter == r %}active{% endif %}"
+         href="{{ url_for('dead_leads_view', q=q, rep=r, quality=quality_filter) }}">{{ r }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if leads and leads|length > 0 %}
+<div class="cards-grid-4">
+  {% for l in leads %}
+  {% set q = (l.quality or 'unknown') %}
+  <div class="kanban-card">
+    <div class="kc-top">
+      <div class="kc-company">{{ l.company or 'Unknown company' }}</div>
+      <span class="badge dead">Dead</span>
+    </div>
+    <div class="kc-meta">
+      {{ (l.lead_date.strftime('%Y-%m-%d') if l.lead_date else '') }}
+      • {{ l.city or '—' }} • {{ l.rep or '—' }}
+    </div>
+    {% if l.notes %}
+    <div class="kc-notes">{{ l.notes[:180] }}{% if l.notes|length > 180 %}…{% endif %}</div>
+    {% endif %}
+    <div class="kc-actions">
+      <a class="btn tiny secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">View</a>
+
+      <!-- Quality buttons (selected one appears red on this page too) -->
+      <form method="post" action="{{ url_for('set_quality', lead_id=l.id, value='good') }}">
+        <button class="btn tiny {% if q|lower != 'good' %}secondary{% endif %}" type="submit">Good</button>
+      </form>
+      <form method="post" action="{{ url_for('set_quality', lead_id=l.id, value='warm') }}">
+        <button class="btn tiny {% if q|lower != 'warm' %}secondary{% endif %}" type="submit">Warm</button>
+      </form>
+
+      <!-- Restore to main board -->
+      <form method="post" action="{{ url_for('restore_dead', lead_id=l.id) }}">
+        <button class="btn tiny" type="submit">Restore</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state">
+  <div class="muted">No dead leads right now.</div>
+</div>
+{% endif %}
+
+<!-- Make quality/restore actions AJAX so the page doesn't jump -->
+<script>
+(function () {
+  document.addEventListener('submit', async (e) => {
+    const form = e.target.closest('.kc-actions form');
+    if (!form) return;
+    e.preventDefault();
+    const card = form.closest('.kanban-card');
+    const btn = form.querySelector('button');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(form.action, { method: 'POST', headers: {'X-Requested-With':'fetch'} });
+      if (!res.ok) throw new Error('Server ' + res.status);
+      const isRestore = /\/restore\b/i.test(form.action);
+      const isQuality = /\/quality\/(good|warm|bad)\b/i.test(form.action);
+
+      if (isRestore) {
+        // Remove from Dead page after restore
+        card.remove();
+      } else if (isQuality) {
+        const val = (form.action.match(/\/quality\/(good|warm|bad)\b/i) || [,''])[1].toLowerCase();
+        const goodBtn = card.querySelector('form[action$="/quality/good"] button');
+        const warmBtn = card.querySelector('form[action$="/quality/warm"] button');
+        const badBtn  = card.querySelector('form[action$="/quality/bad"] button'); // not present here
+        [['good',goodBtn],['warm',warmBtn],['bad',badBtn]].forEach(([k, el])=>{
+          if (!el) return;
+          if (k === val) el.classList.remove('secondary'); else el.classList.add('secondary');
+        });
+      }
+    } catch (err) {
+      alert('Action failed: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}
