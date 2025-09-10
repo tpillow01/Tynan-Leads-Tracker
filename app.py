@@ -29,11 +29,9 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# Ensure tables exist even when running under gunicorn on Render
-@app.before_first_request
-def _create_all():
+with app.app_context():
     db.create_all()
-
+    
 # --------------------
 # AI Analysis (optional)
 # --------------------
