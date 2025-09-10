@@ -9,11 +9,6 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, func
 
-# Optional imports used only by /import route
-import tempfile
-import pandas as pd
-from werkzeug.utils import secure_filename
-
 # --------------------
 # Flask Config
 # --------------------
@@ -110,32 +105,42 @@ def all_reps_options():
 # --------------------
 ALLOWED_EXTENSIONS = {".xlsx", ".xls", ".csv"}
 
-def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_columns(df):
+    # local import so pandas is only loaded when this runs
+    import pandas as pd
     df = df.copy()
     df.columns = [str(c).strip().lower() for c in df.columns]
     return df
 
 def is_empty(v) -> bool:
     try:
-        if pd.isna(v): return True
+        # local import to use pd.isna
+        import pandas as pd
+        if pd.isna(v):
+            return True
     except Exception:
         pass
-    if v is None: return True
+    if v is None:
+        return True
     return isinstance(v, str) and v.strip() == ""
 
-def coerce_text(v):
-    if is_empty(v): return None
-    s = str(v).strip()
-    return s if s else None
-
 def parse_date_safe(v):
-    if is_empty(v): return None
-    if isinstance(v, pd.Timestamp): return v.date()
-    if isinstance(v, datetime): return v.date()
-    if isinstance(v, date): return v
+    # local import for Timestamp/to_datetime
+    import pandas as pd
+    from datetime import datetime, date
+
+    if is_empty(v):
+        return None
+    if isinstance(v, pd.Timestamp):
+        return v.date()
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, date):
+        return v
     try:
         ts = pd.to_datetime(v, errors="coerce")
-        if pd.isna(ts): return None
+        if pd.isna(ts):
+            return None
         return ts.date()
     except Exception:
         return None
@@ -145,8 +150,7 @@ def row_to_lead_kwargs(row):
     def pick_text(*names):
         for n in names:
             if n in cols:
-                return coerce_text(row[n])
-        return None
+             return None
     return dict(
         company      = pick_text("company"),
         notes        = pick_text("notes", "comments", "details", "remarks"),
@@ -482,6 +486,10 @@ def add_lead():
 # --------------------
 @app.route("/import", methods=["GET", "POST"])
 def import_leads_view():
+    # localize heavy imports so the app can start without them
+    import tempfile
+    import pandas as pd
+
     if request.method == "POST":
         f = request.files.get("file")
         if not f or f.filename == "":
@@ -501,6 +509,7 @@ def import_leads_view():
             flash("No rows found in file.", "error"); return redirect(url_for("import_leads_view"))
 
         df = normalize_columns(df)
+        # ... (rest of your import logic unchanged)
 
         inserted = skipped = updated = 0
         for _, row in df.iterrows():
