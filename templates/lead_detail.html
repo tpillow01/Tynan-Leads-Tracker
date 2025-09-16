@@ -5,6 +5,7 @@
 <section class="page-header">
   <h2>{{ lead.company or 'Unnamed Lead' }}</h2>
   <div class="actions">
+    <a class="btn" href="{{ url_for('edit_lead', lead_id=lead.id) }}">✏️ Edit</a>
     <a class="btn secondary" href="{{ url_for('kanban_view') }}">Back to Dashboard</a>
   </div>
 </section>

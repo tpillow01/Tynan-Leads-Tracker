@@ -84,8 +84,11 @@
             • {{ l.city or '—' }} • {{ l.source or '—' }} • {{ l.rep or '—' }}
           </div>
         </div>
-        <div class="inbox-row-side">
+        <div class="inbox-row-side" style="display:flex; align-items:center; gap:8px;">
           <span class="badge {{ q }}">{{ q.title() }}</span>
+          <!-- NEW: Edit + View buttons for each lead -->
+          <a class="btn tiny" href="{{ url_for('edit_lead', lead_id=l.id) }}">✏️ Edit</a>
+          <a class="btn tiny secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">View</a>
         </div>
       </div>
       {% endfor %}

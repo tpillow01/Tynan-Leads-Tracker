@@ -57,6 +57,9 @@
     <div class="kc-notes">{{ l.notes[:180] }}{% if l.notes|length > 180 %}…{% endif %}</div>
     {% endif %}
     <div class="kc-actions">
+      <!-- NEW: Edit button on every dead-lead card -->
+      <a class="btn tiny" href="{{ url_for('edit_lead', lead_id=l.id) }}">✏️ Edit</a>
+
       <a class="btn tiny secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">View</a>
 
       <!-- Quality buttons (selected one appears red on this page too) -->

@@ -65,6 +65,9 @@
             <div class="kc-notes">{{ l.notes[:120] }}{% if l.notes|length > 120 %}…{% endif %}</div>
             {% endif %}
             <div class="kc-actions">
+              <!-- NEW: Edit button on every card -->
+              <a class="btn tiny" href="{{ url_for('edit_lead', lead_id=l.id) }}">✏️ Edit</a>
+
               <!-- View is neutral -->
               <a class="btn tiny secondary" href="{{ url_for('lead_detail', lead_id=l.id) }}">View</a>
 

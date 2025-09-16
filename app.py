@@ -544,6 +544,61 @@ def import_leads_view():
     return render_template("import.html")
 
 # --------------------
+# Edit Lead
+# --------------------
+@app.route("/lead/<int:lead_id>/edit", methods=["GET", "POST"])
+def edit_lead(lead_id):
+    lead = Lead.query.get_or_404(lead_id)
+
+    if request.method == "POST":
+        # Basic text fields
+        lead.company       = (request.form.get("company") or None)
+        lead.contact_name  = (request.form.get("contact_name") or None)
+        lead.contact_email = (request.form.get("contact_email") or None)
+        lead.phone         = (request.form.get("phone") or None)
+        lead.industry      = (request.form.get("industry") or None)
+        lead.fleet_size    = (request.form.get("fleet_size") or None)
+        lead.notes         = (request.form.get("notes") or None)
+        lead.source        = (request.form.get("source") or None)
+        lead.address       = (request.form.get("address") or None)
+        lead.city          = (request.form.get("city") or None)
+
+        # Stage & quality (normalize to known values)
+        stage = (request.form.get("stage") or "").strip().lower() or None
+        quality = (request.form.get("quality") or "").strip().lower() or None
+        lead.stage = stage if stage in STAGES else None
+        lead.quality = quality if quality in {"good", "warm", "bad"} else None
+
+        # Rep handling (same pattern as add_lead)
+        rep_select = (request.form.get("rep_select") or "").strip()
+        rep_other  = (request.form.get("rep_other") or "").strip()
+        rep_direct = (request.form.get("rep") or "").strip()
+        lead.rep   = rep_other or (None if rep_select == "__other__" else rep_select) or rep_direct or None
+
+        # lead_date
+        date_str = (request.form.get("lead_date") or "").strip()
+        if date_str:
+            try:
+                lead.lead_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except Exception:
+                flash("Invalid lead date format. Use YYYY-MM-DD.", "error")
+                return redirect(url_for("edit_lead", lead_id=lead.id))
+        else:
+            lead.lead_date = None
+
+        db.session.commit()
+        flash("Lead updated.", "success")
+        return redirect(url_for("lead_detail", lead_id=lead.id))
+
+    # GET: render form with current values
+    return render_template("edit_lead.html",
+                           lead=lead,
+                           reps=all_reps_options(),
+                           stages=STAGES,
+                           qualities=["good", "warm", "bad", "unknown"])
+
+
+# --------------------
 # Run Server (Port 5020)
 # --------------------
 if __name__ == "__main__":
