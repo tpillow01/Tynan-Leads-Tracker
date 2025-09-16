@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Edit Lead</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0f0f10; color:#e9e9ea; margin:0; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background:#17181a; border:1px solid #2a2b2f; border-radius:12px; padding:24px; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    h1 { margin:0 0 18px; font-size: 22px; }
+    form { display:grid; grid-template-columns: repeat(12, 1fr); gap:14px; }
+    label { font-size: 12px; color:#aeb0b3; margin-bottom:6px; display:block; }
+    input, select, textarea {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #2a2b2f;
+      background:#101113; color:#e9e9ea; outline:none;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .col-12 { grid-column: span 12; }
+    .col-6  { grid-column: span 6; }
+    .col-4  { grid-column: span 4; }
+    .col-3  { grid-column: span 3; }
+    .row { display: contents; }
+    .hint { font-size: 12px; color:#8d9096; margin-top: 4px; }
+    .actions { display:flex; gap:10px; margin-top: 14px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:10px; border:1px solid transparent; text-decoration:none; cursor:pointer;
+      background:#cc0000; color:white; font-weight:600;
+    }
+    .btn.secondary { background:#101113; color:#e9e9ea; border-color:#2a2b2f; }
+    .grid-header { grid-column: span 12; padding-bottom:10px; border-bottom:1px solid #232428; margin-bottom:8px; }
+    @media (max-width: 800px) {
+      .col-6, .col-4, .col-3 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Edit Lead — {{ lead.company or lead.contact_name or ("Lead #" ~ lead.id) }}</h1>
+
+      <form method="POST" action="{{ url_for('edit_lead', lead_id=lead.id) }}">
+        <!-- Company & Contact -->
+        <div class="grid-header"><strong>Basic Info</strong></div>
+        <div class="col-6">
+          <label for="company">Company</label>
+          <input id="company" name="company" value="{{ lead.company or '' }}">
+        </div>
+        <div class="col-6">
+          <label for="contact_name">Contact Name</label>
+          <input id="contact_name" name="contact_name" value="{{ lead.contact_name or '' }}">
+        </div>
+        <div class="col-6">
+          <label for="contact_email">Contact Email</label>
+          <input id="contact_email" name="contact_email" value="{{ lead.contact_email or '' }}">
+        </div>
+        <div class="col-6">
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" value="{{ lead.phone or '' }}">
+        </div>
+
+        <div class="col-6">
+          <label for="industry">Industry / Segment</label>
+          <input id="industry" name="industry" value="{{ lead.industry or '' }}">
+        </div>
+        <div class="col-6">
+          <label for="fleet_size">Fleet Size</label>
+          <input id="fleet_size" name="fleet_size" value="{{ lead.fleet_size or '' }}">
+        </div>
+
+        <div class="col-12">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes">{{ lead.notes or '' }}</textarea>
+        </div>
+
+        <!-- Address -->
+        <div class="grid-header"><strong>Location</strong></div>
+        <div class="col-8">
+          <label for="address">Address</label>
+          <input id="address" name="address" value="{{ lead.address or '' }}">
+        </div>
+        <div class="col-4">
+          <label for="city">City</label>
+          <input id="city" name="city" value="{{ lead.city or '' }}">
+        </div>
+
+        <!-- Meta -->
+        <div class="grid-header"><strong>Meta</strong></div>
+        <div class="col-4">
+          <label for="source">Source</label>
+          <input id="source" name="source" value="{{ lead.source or '' }}">
+        </div>
+
+        <div class="col-4">
+          <label for="lead_date">Lead Date</label>
+          <input id="lead_date" type="date" name="lead_date" value="{{ (lead.lead_date|string) if lead.lead_date else '' }}">
+          <div class="hint">YYYY-MM-DD</div>
+        </div>
+
+        <div class="col-4">
+          <label for="rep_select">Rep</label>
+          <select id="rep_select" name="rep_select">
+            <option value="">-- Select rep --</option>
+            {% for r in reps %}
+              <option value="{{ r }}" {{ 'selected' if lead.rep==r else '' }}>{{ r }}</option>
+            {% endfor %}
+            <option value="__other__" {{ 'selected' if lead.rep and (lead.rep not in reps) else '' }}>Other...</option>
+          </select>
+          <div class="hint">Choose “Other…” to type a custom rep.</div>
+        </div>
+
+        <div class="col-4">
+          <label for="rep_other">Custom Rep</label>
+          <input id="rep_other" name="rep_other" placeholder="Type a custom rep"
+                 value="{{ (lead.rep if (lead.rep and (lead.rep not in reps)) else '') }}">
+        </div>
+
+        <div class="col-4">
+          <label for="stage">Stage</label>
+          <select id="stage" name="stage">
+            <option value="">(unset)</option>
+            {% for s in stages %}
+              <option value="{{ s }}" {{ 'selected' if (lead.stage or 'new')|lower == s else '' }}>{{ s.title() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-4">
+          <label for="quality">Quality</label>
+          <select id="quality" name="quality">
+            <option value="">Unknown</option>
+            {% for q in qualities %}
+              {% set is_sel = (lead.quality or '')|lower == q %}
+              <option value="{{ q }}" {{ 'selected' if is_sel else '' }}>{{ q.title() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 actions">
+          <a class="btn secondary" href="{{ url_for('lead_detail', lead_id=lead.id) }}">Cancel</a>
+          <button class="btn" type="submit">Save Changes</button>
+        </div>
+
+        <!-- Hidden direct 'rep' text fallback (kept for compatibility with your POST handling) -->
+        <input type="hidden" name="rep" id="rep_direct" value="{{ lead.rep or '' }}">
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Toggle the custom rep field based on selection
+    const repSelect = document.getElementById('rep_select');
+    const repOther  = document.getElementById('rep_other');
+    const repDirect = document.getElementById('rep_direct');
+
+    function syncRep() {
+      if (repSelect.value === '__other__') {
+        repOther.disabled = false;
+        repOther.style.opacity = 1;
+        repDirect.value = repOther.value;
+      } else if (repSelect.value) {
+        repOther.disabled = true;
+        repOther.style.opacity = 0.6;
+        repDirect.value = repSelect.value;
+      } else {
+        repOther.disabled = true;
+        repOther.style.opacity = 0.6;
+        repDirect.value = '';
+      }
+    }
+    repSelect.addEventListener('change', syncRep);
+    repOther.addEventListener('input', () => { repDirect.value = repOther.value; });
+
+    // Initialize on load
+    syncRep();
+  </script>
+</body>
+</html>
